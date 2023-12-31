@@ -1,5 +1,5 @@
 name: 'Update tags'
-description: 'Update tags in the repository'
+description: 'Updates tags in a repository using semantic versioning'
 
 inputs:
   version:
@@ -31,6 +31,8 @@ runs:
       uses: actions/checkout@v4
       with:
         submodules: true
+        repository: dae-ne/update-tags
+        path: update-tags-action
     - name: Set up Git
       run: |
         git config user.email ${{ inputs.email }}
@@ -38,13 +40,13 @@ runs:
       shell: bash
     - name: Add permissions
       run: |
-        chmod +x ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh
+        chmod +x update-tags-action/update-tags-script/update_tags.sh
       shell: bash
     - name: Run script
       run: |
         if [ -z "${{ inputs.version }}" ]; then
-          ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
+          update-tags-action/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
         else
-          ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
+          update-tags-action/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
         fi
       shell: bash
