@@ -22,11 +22,13 @@ inputs:
     type: string
   email:
     description: 'email to use for git'
-    required: true
+    required: false
+    default: '${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com'
     type: string
   name:
     description: 'name to use for git'
-    required: true
+    required: false
+    default: '${GITHUB_ACTOR}'
     type: string
 
 runs:
