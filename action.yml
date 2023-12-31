@@ -15,6 +15,11 @@ inputs:
       - patch
       - minor
       - major
+  path:
+    description: 'path to place the action in'
+    required: false
+    default: './actions/update-tags'
+    type: string
   email:
     description: 'email to use for git'
     required: true
@@ -40,13 +45,13 @@ runs:
       shell: bash
     - name: Add permissions
       run: |
-        chmod +x update-tags-action/update-tags-script/update_tags.sh
+        chmod +x ${{ inputs.path }}/update-tags-script/update_tags.sh
       shell: bash
     - name: Run script
       run: |
         if [ -z "${{ inputs.version }}" ]; then
-          update-tags-action/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
+          ${{ inputs.path }}/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
         else
-          update-tags-action/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
+          ${{ inputs.path }}/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
         fi
       shell: bash
