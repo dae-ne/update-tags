@@ -38,13 +38,13 @@ runs:
       shell: bash
     - name: Add permissions
       run: |
-        chmod +x update-tags-script/update_tags.sh
+        chmod +x ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh
       shell: bash
     - name: Run script
       run: |
         if [ -z "${{ inputs.version }}" ]; then
-          update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
+          ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
         else
-          update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
+          ${GITHUB_ACTION_PATH}/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
         fi
       shell: bash
