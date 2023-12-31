@@ -35,9 +35,11 @@ runs:
       run: |
         git config user.email ${{ inputs.email }}
         git config user.name ${{ inputs.name }}
+      shell: bash
     - name: Add permissions
       run: |
         chmod +x update-tags-script/update_tags.sh
+      shell: bash
     - name: Run script
       run: |
         if [ -z "${{ inputs.version }}" ]; then
