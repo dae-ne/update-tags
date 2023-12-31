@@ -37,7 +37,7 @@ runs:
       with:
         submodules: true
         repository: dae-ne/update-tags
-        path: update-tags-action
+        path: ${{ inputs.path }}
     - name: Set up Git
       run: |
         git config user.email ${{ inputs.email }}
