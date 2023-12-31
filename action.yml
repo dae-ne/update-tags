@@ -1,0 +1,48 @@
+name: 'Update tags'
+description: 'Update tags in the repository'
+
+inputs:
+  version:
+    description: 'specific version'
+    required: false
+    type: string
+  update-type:
+    description: 'version update type'
+    required: false
+    default: 'patch'
+    type: choice
+    options:
+      - patch
+      - minor
+      - major
+  email:
+    description: 'email to use for git'
+    required: true
+    type: string
+  name:
+    description: 'name to use for git'
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Set up Git
+      run: |
+        git config user.email ${{ inputs.email }}
+        git config user.name ${{ inputs.name }}
+    - name: Add permissions
+      run: |
+        chmod +x update-tags-script/update_tags.sh
+    - name: Run script
+      run: |
+        if [ -z "${{ inputs.version }}" ]; then
+          update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
+        else
+          update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
+        fi
+      shell: bash
