@@ -24,19 +24,21 @@ export function splitVersion(version: string): Version {
   };
 }
 
-export function joinVersion(version: Version): string {
-  const { major, minor, patch, preRelease, build } = version;
-  let versionString = `${major}.${minor}.${patch}`;
+export function buildFullVersion(version: Version): string {
+  const { major, minor, patch } = version;
+  const versionString = `${major}.${minor}.${patch}`;
+  return addSuffix(versionString, version);
+}
 
-  if (preRelease) {
-    versionString += `-${preRelease}`;
-  }
+export function buildMinorVersion(version: Version): string {
+  const { major, minor } = version;
+  const versionString = `${major}.${minor}`;
+  return addSuffix(versionString, version);
+}
 
-  if (build) {
-    versionString += `+${build}`;
-  }
-
-  return versionString;
+export function buildMajorVersion(version: Version): string {
+  const { major } = version;
+  return addSuffix(`${major}`, version);
 }
 
 export function incrementVersion(version: Version, type: IncrementType): Version {
@@ -65,4 +67,19 @@ export function incrementVersion(version: Version, type: IncrementType): Version
 export function setFirstVersion(type?: IncrementType) {
   const defaultVersion = '0.1.0';
   return type === 'major' ? '1.0.0' : defaultVersion;
+}
+
+function addSuffix(versionCore: string, version: Version): string {
+  const { preRelease, build } = version;
+  let versionString = versionCore;
+
+  if (version.preRelease) {
+    versionString += `-${preRelease}`;
+  }
+
+  if (version.build) {
+    versionString += `+${build}`;
+  }
+
+  return versionString;
 }

@@ -1,6 +1,6 @@
 import simpleGit from 'simple-git';
 import { setFailed } from '@actions/core';
-import { splitVersion, incrementVersion, joinVersion, setFirstVersion } from './version';
+import { splitVersion, incrementVersion, buildFullVersion, setFirstVersion, buildMinorVersion, buildMajorVersion } from './version';
 import { Inputs, getInputs, setOutputs } from './io';
 
 const git = simpleGit();
@@ -20,7 +20,7 @@ git.tags(async (err, tags) => {
     return;
   }
 
-  const { specificVersion, incrementType, pushToRemote } = inputs;
+  const { specificVersion, incrementType } = inputs;
   const { all, latest } = tags;
 
   if (specificVersion) {
@@ -40,20 +40,24 @@ git.tags(async (err, tags) => {
   let version = splitVersion(latestSemanticVersion);
   version = incrementVersion(version, incrementType);
 
-  let versionString = joinVersion(version);
+  let versionString = buildFullVersion(version);
+  let minorVersionString = buildMinorVersion(version);
+  let majorVersionString = buildMajorVersion(version);
 
   if (hasPrefix) {
     versionString = `v${versionString}`;
+    minorVersionString = `v${minorVersionString}`;
+    majorVersionString = `v${majorVersionString}`;
   }
 
-  if (pushToRemote) {
-    try {
-      await git.addAnnotatedTag(versionString, `Release ${versionString}`);
-      await git.pushTags();
-    } catch (error) {
-      setFailed(error.message);
-      return;
-    }
+  try {
+    await git.addAnnotatedTag(minorVersionString, `Release ${minorVersionString}`);
+    await git.addAnnotatedTag(majorVersionString, `Release ${majorVersionString}`);
+    await git.addAnnotatedTag(versionString, `Release ${versionString}`);
+    await git.pushTags(['--force']);
+  } catch (error) {
+    setFailed(error.message);
+    return;
   }
 
   setOutputs(versionString, latest);

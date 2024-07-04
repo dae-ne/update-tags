@@ -1,13 +1,18 @@
-name: 'Get MSBuild project version'
-description: 'Reads MSBuild project version from .proj (.csproj, .vbproj, .dbproj, etc.) files'
+name: 'Update Tags'
+description: 'Updates tags for the repository using semantic versioning'
 inputs:
-  validate-all:
-    description: 'Validate all version parts'
+  version:
+    description: 'Set specific version'
     required: false
-    default: false
+  type:
+    description: 'Type of version increment. Available options: major, minor, patch'
+    required: false
+    default: 'patch'
 outputs:
-  version-prefix:
-    description: 'Version prefix'
+  version:
+    description: 'Version that was set'
+  previous_version:
+    description: 'Previous version'
 runs:
-  using: 'node20' # TODO: check if the version is correct
+  using: 'node20'
   main: 'dist/index.js'

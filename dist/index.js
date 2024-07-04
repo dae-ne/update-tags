@@ -31037,6 +31037,32 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 8672:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getInputs = getInputs;
+exports.setOutputs = setOutputs;
+const core_1 = __nccwpck_require__(2186);
+const version_1 = __nccwpck_require__(1946);
+function getInputs() {
+    const specificVersion = (0, core_1.getInput)('version');
+    const incrementType = (0, core_1.getInput)('type');
+    if (incrementType && !version_1.IncrementTypes.includes(incrementType)) {
+        throw new Error(`Invalid increment type: ${incrementType}`);
+    }
+    return { specificVersion, incrementType: incrementType };
+}
+function setOutputs(version, previousVersion) {
+    (0, core_1.setOutput)('version', version);
+    (0, core_1.setOutput)('previous-version', previousVersion);
+}
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -31055,34 +31081,55 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const simple_git_1 = __nccwpck_require__(9103);
 const core_1 = __nccwpck_require__(2186);
 const version_1 = __nccwpck_require__(1946);
+const io_1 = __nccwpck_require__(8672);
 const git = (0, simple_git_1.default)();
-const specificVersion = (0, core_1.getInput)('version');
-const incrementType = (0, core_1.getInput)('type');
 git.tags((err, tags) => __awaiter(void 0, void 0, void 0, function* () {
     if (err) {
         (0, core_1.setFailed)(err.message);
         return;
     }
+    let inputs;
+    try {
+        inputs = (0, io_1.getInputs)();
+    }
+    catch (error) {
+        (0, core_1.setFailed)(error.message);
+        return;
+    }
+    const { specificVersion, incrementType } = inputs;
     const { all, latest } = tags;
     if (specificVersion) {
-        (0, core_1.setOutput)('version', specificVersion);
-        (0, core_1.setOutput)('previous-version', latest);
+        (0, io_1.setOutputs)(specificVersion, latest);
         return;
     }
     if (!latest) {
-        // TODO: handle first version
+        const firstVersion = (0, version_1.setFirstVersion)(incrementType);
+        (0, io_1.setOutputs)(firstVersion);
         return;
     }
     const hasPrefix = latest.startsWith('v');
     const latestSemanticVersion = hasPrefix ? latest.slice(1) : latest;
     let version = (0, version_1.splitVersion)(latestSemanticVersion);
-    version = (0, version_1.incrementVersion)(version, 'patch');
-    let versionString = (0, version_1.joinVersion)(version);
+    version = (0, version_1.incrementVersion)(version, incrementType);
+    let versionString = (0, version_1.buildFullVersion)(version);
+    let minorVersionString = (0, version_1.buildMinorVersion)(version);
+    let majorVersionString = (0, version_1.buildMajorVersion)(version);
     if (hasPrefix) {
         versionString = `v${versionString}`;
+        minorVersionString = `v${minorVersionString}`;
+        majorVersionString = `v${majorVersionString}`;
     }
-    (0, core_1.setOutput)('version', versionString);
-    (0, core_1.setOutput)('previous-version', latest);
+    try {
+        yield git.addAnnotatedTag(minorVersionString, `Release ${minorVersionString}`);
+        yield git.addAnnotatedTag(majorVersionString, `Release ${majorVersionString}`);
+        yield git.addAnnotatedTag(versionString, `Release ${versionString}`);
+        yield git.pushTags(['--force']);
+    }
+    catch (error) {
+        (0, core_1.setFailed)(error.message);
+        return;
+    }
+    (0, io_1.setOutputs)(versionString, latest);
 }));
 
 
@@ -31094,9 +31141,14 @@ git.tags((err, tags) => __awaiter(void 0, void 0, void 0, function* () {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.IncrementTypes = void 0;
 exports.splitVersion = splitVersion;
-exports.joinVersion = joinVersion;
+exports.buildFullVersion = buildFullVersion;
+exports.buildMinorVersion = buildMinorVersion;
+exports.buildMajorVersion = buildMajorVersion;
 exports.incrementVersion = incrementVersion;
+exports.setFirstVersion = setFirstVersion;
+exports.IncrementTypes = ['major', 'minor', 'patch'];
 function splitVersion(version) {
     const [versionCore, suffix] = version.split(/[-+]/, 2);
     const [preReleasePart, buildPart] = suffix === null || suffix === void 0 ? void 0 : suffix.split('+', 2);
@@ -31109,16 +31161,19 @@ function splitVersion(version) {
         build: buildPart,
     };
 }
-function joinVersion(version) {
-    const { major, minor, patch, preRelease, build } = version;
-    let versionString = `${major}.${minor}.${patch}`;
-    if (preRelease) {
-        versionString += `-${preRelease}`;
-    }
-    if (build) {
-        versionString += `+${build}`;
-    }
-    return versionString;
+function buildFullVersion(version) {
+    const { major, minor, patch } = version;
+    const versionString = `${major}.${minor}.${patch}`;
+    return addSuffix(versionString, version);
+}
+function buildMinorVersion(version) {
+    const { major, minor } = version;
+    const versionString = `${major}.${minor}`;
+    return addSuffix(versionString, version);
+}
+function buildMajorVersion(version) {
+    const { major } = version;
+    return addSuffix(`${major}`, version);
 }
 function incrementVersion(version, type) {
     let { major, minor, patch } = version;
@@ -31136,6 +31191,21 @@ function incrementVersion(version, type) {
     return Object.assign(Object.assign({}, version), { major,
         minor,
         patch });
+}
+function setFirstVersion(type) {
+    const defaultVersion = '0.1.0';
+    return type === 'major' ? '1.0.0' : defaultVersion;
+}
+function addSuffix(versionCore, version) {
+    const { preRelease, build } = version;
+    let versionString = versionCore;
+    if (version.preRelease) {
+        versionString += `-${preRelease}`;
+    }
+    if (version.build) {
+        versionString += `+${build}`;
+    }
+    return versionString;
 }
 
 
