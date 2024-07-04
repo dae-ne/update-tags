@@ -1,59 +1,13 @@
-name: 'Update tags'
-description: 'Updates tags in a repository using semantic versioning'
-
+name: 'Get MSBuild project version'
+description: 'Reads MSBuild project version from .proj (.csproj, .vbproj, .dbproj, etc.) files'
 inputs:
-  version:
-    description: 'specific version'
+  validate-all:
+    description: 'Validate all version parts'
     required: false
-    type: string
-  update-type:
-    description: 'version update type'
-    required: false
-    default: 'patch'
-    type: choice
-    options:
-      - patch
-      - minor
-      - major
-  path:
-    description: 'path to place the action in'
-    required: false
-    default: './actions/update-tags'
-    type: string
-  email:
-    description: 'email to use for git'
-    required: false
-    default: '${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com'
-    type: string
-  name:
-    description: 'name to use for git'
-    required: false
-    default: '${GITHUB_ACTOR}'
-    type: string
-
+    default: false
+outputs:
+  version-prefix:
+    description: 'Version prefix'
 runs:
-  using: composite
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        submodules: true
-        repository: dae-ne/update-tags
-        path: ${{ inputs.path }}
-    - name: Set up Git
-      run: |
-        git config user.email ${{ inputs.email }}
-        git config user.name ${{ inputs.name }}
-      shell: bash
-    - name: Add permissions
-      run: |
-        chmod +x ${{ inputs.path }}/update-tags-script/update_tags.sh
-      shell: bash
-    - name: Run script
-      run: |
-        if [ -z "${{ inputs.version }}" ]; then
-          ${{ inputs.path }}/update-tags-script/update_tags.sh -f -t ${{ inputs.update-type }}
-        else
-          ${{ inputs.path }}/update-tags-script/update_tags.sh -f -v ${{ inputs.version }} -t ${{ inputs.update-type }}
-        fi
-      shell: bash
+  using: 'node20' # TODO: check if the version is correct
+  main: 'dist/index.js'
