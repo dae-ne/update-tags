@@ -31115,13 +31115,15 @@ function getNewVersion(inputs, tag) {
         yield git
             .tags([
             '-f',
-            `-a ${majorVersionString}`,
-            `-m "Updating ${majorVersionString} to ${versionString}"`
+            '-a',
+            `-m "Updating ${majorVersionString} to ${versionString}"`,
+            majorVersionString
         ])
             .tags([
             '-f',
-            `-a ${minorVersionString}`,
-            `-m "Updating ${minorVersionString} to ${versionString}"`
+            '-a',
+            `-m "Updating ${minorVersionString} to ${versionString}"`,
+            minorVersionString
         ])
             .addAnnotatedTag(versionString, `Release ${versionString}`)
             .pushTags(['--force']);
