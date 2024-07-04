@@ -2,7 +2,7 @@ import { getInput, setOutput } from '@actions/core';
 import { IncrementType, IncrementTypes } from './version';
 
 export type Inputs = {
-  specificVersion: string;
+  specificVersion?: string;
   incrementType: IncrementType;
 };
 

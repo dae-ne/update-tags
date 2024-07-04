@@ -31083,6 +31083,19 @@ const core_1 = __nccwpck_require__(2186);
 const version_1 = __nccwpck_require__(1946);
 const io_1 = __nccwpck_require__(8672);
 const git = (0, simple_git_1.default)();
+function getNewVersion(inputs, tag) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { specificVersion, incrementType } = inputs;
+        if (specificVersion) {
+            return (0, version_1.splitVersion)(specificVersion);
+        }
+        if (!tag) {
+            return (0, version_1.setFirstVersion)(incrementType);
+        }
+        const version = (0, version_1.splitVersion)(tag);
+        return (0, version_1.incrementVersion)(version, incrementType);
+    });
+}
 git.tags((err, tags) => __awaiter(void 0, void 0, void 0, function* () {
     if (err) {
         (0, core_1.setFailed)(err.message);
@@ -31096,34 +31109,21 @@ git.tags((err, tags) => __awaiter(void 0, void 0, void 0, function* () {
         (0, core_1.setFailed)(error.message);
         return;
     }
-    const { specificVersion, incrementType } = inputs;
     const { all, latest } = tags;
-    if (specificVersion) {
-        (0, io_1.setOutputs)(specificVersion, latest);
+    const version = yield getNewVersion(inputs, latest);
+    if (typeof version === 'string') {
+        (0, core_1.setFailed)(version);
         return;
     }
-    if (!latest) {
-        const firstVersion = (0, version_1.setFirstVersion)(incrementType);
-        (0, io_1.setOutputs)(firstVersion);
-        return;
-    }
-    const hasPrefix = latest.startsWith('v');
-    const latestSemanticVersion = hasPrefix ? latest.slice(1) : latest;
-    let version = (0, version_1.splitVersion)(latestSemanticVersion);
-    version = (0, version_1.incrementVersion)(version, incrementType);
     let versionString = (0, version_1.buildFullVersion)(version);
     let minorVersionString = (0, version_1.buildMinorVersion)(version);
     let majorVersionString = (0, version_1.buildMajorVersion)(version);
-    if (hasPrefix) {
-        versionString = `v${versionString}`;
-        minorVersionString = `v${minorVersionString}`;
-        majorVersionString = `v${majorVersionString}`;
-    }
     try {
-        yield git.addAnnotatedTag(minorVersionString, `Release ${minorVersionString}`);
-        yield git.addAnnotatedTag(majorVersionString, `Release ${majorVersionString}`);
-        yield git.addAnnotatedTag(versionString, `Release ${versionString}`);
-        yield git.pushTags(['--force']);
+        yield git
+            .addAnnotatedTag(majorVersionString, `Updating ${majorVersionString} to ${versionString}`)
+            .addAnnotatedTag(minorVersionString, `Updating ${minorVersionString} to ${versionString}`)
+            .addAnnotatedTag(versionString, `Release ${versionString}`)
+            .pushTags(['--force']);
     }
     catch (error) {
         (0, core_1.setFailed)(error.message);
@@ -31148,32 +31148,43 @@ exports.buildMinorVersion = buildMinorVersion;
 exports.buildMajorVersion = buildMajorVersion;
 exports.incrementVersion = incrementVersion;
 exports.setFirstVersion = setFirstVersion;
+const VERSION_PREFIX = 'v';
 exports.IncrementTypes = ['major', 'minor', 'patch'];
 function splitVersion(version) {
-    const [versionCore, suffix] = version.split(/[-+]/, 2);
-    const [preReleasePart, buildPart] = suffix === null || suffix === void 0 ? void 0 : suffix.split('+', 2);
+    const hasPrefix = version.startsWith(VERSION_PREFIX);
+    const semanticVersion = hasPrefix ? version.slice(1) : version;
+    const [versionCore, suffix] = semanticVersion.split(/[-+]/, 2);
     const [major, minor, patch] = versionCore.split('.').map(Number);
+    const suffixParts = suffix === null || suffix === void 0 ? void 0 : suffix.split('+', 2);
     return {
+        hasPrefix,
         major,
         minor,
         patch,
-        preRelease: preReleasePart,
-        build: buildPart,
+        preRelease: suffixParts === null || suffixParts === void 0 ? void 0 : suffixParts[0],
+        build: suffixParts === null || suffixParts === void 0 ? void 0 : suffixParts[1]
     };
 }
 function buildFullVersion(version) {
-    const { major, minor, patch } = version;
-    const versionString = `${major}.${minor}.${patch}`;
+    const { hasPrefix, major, minor, patch } = version;
+    const versionString = hasPrefix
+        ? `${VERSION_PREFIX}${major}.${minor}.${patch}`
+        : `${major}.${minor}.${patch}`;
     return addSuffix(versionString, version);
 }
 function buildMinorVersion(version) {
-    const { major, minor } = version;
-    const versionString = `${major}.${minor}`;
+    const { hasPrefix, major, minor } = version;
+    const versionString = hasPrefix
+        ? `${VERSION_PREFIX}${major}.${minor}`
+        : `${major}.${minor}`;
     return addSuffix(versionString, version);
 }
 function buildMajorVersion(version) {
-    const { major } = version;
-    return addSuffix(`${major}`, version);
+    const { hasPrefix, major } = version;
+    const versionString = hasPrefix
+        ? `${VERSION_PREFIX}${major}`
+        : `${major}`;
+    return addSuffix(versionString, version);
 }
 function incrementVersion(version, type) {
     let { major, minor, patch } = version;
@@ -31194,7 +31205,8 @@ function incrementVersion(version, type) {
 }
 function setFirstVersion(type) {
     const defaultVersion = '0.1.0';
-    return type === 'major' ? '1.0.0' : defaultVersion;
+    const version = type === 'major' ? '1.0.0' : defaultVersion;
+    return splitVersion(version);
 }
 function addSuffix(versionCore, version) {
     const { preRelease, build } = version;
