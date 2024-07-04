@@ -78,7 +78,7 @@ export function incrementVersion(version: Version, type: IncrementType): Version
   };
 }
 
-export function setFirstVersion(type?: IncrementType): Version {
+export function getInitialVersion(type?: IncrementType): Version {
   const defaultVersion = '0.1.0';
   const version = type === 'major' ? '1.0.0' : defaultVersion;
   return splitVersion(version);

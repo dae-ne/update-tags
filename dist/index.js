@@ -31082,7 +31082,11 @@ const simple_git_1 = __nccwpck_require__(9103);
 const core_1 = __nccwpck_require__(2186);
 const version_1 = __nccwpck_require__(1946);
 const io_1 = __nccwpck_require__(8672);
-const git = (0, simple_git_1.default)();
+const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
+const git = (0, simple_git_1.default)({ config: [
+        `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
+        `user.name=${GITHUB_ACTOR}`
+    ] });
 function getNewVersion(inputs, tag) {
     return __awaiter(this, void 0, void 0, function* () {
         const { specificVersion, incrementType } = inputs;
@@ -31090,7 +31094,7 @@ function getNewVersion(inputs, tag) {
             return (0, version_1.splitVersion)(specificVersion);
         }
         if (!tag) {
-            return (0, version_1.setFirstVersion)(incrementType);
+            return (0, version_1.getInitialVersion)(incrementType);
         }
         const version = (0, version_1.splitVersion)(tag);
         return (0, version_1.incrementVersion)(version, incrementType);
@@ -31147,7 +31151,7 @@ exports.buildFullVersion = buildFullVersion;
 exports.buildMinorVersion = buildMinorVersion;
 exports.buildMajorVersion = buildMajorVersion;
 exports.incrementVersion = incrementVersion;
-exports.setFirstVersion = setFirstVersion;
+exports.getInitialVersion = getInitialVersion;
 const VERSION_PREFIX = 'v';
 exports.IncrementTypes = ['major', 'minor', 'patch'];
 function splitVersion(version) {
@@ -31203,7 +31207,7 @@ function incrementVersion(version, type) {
         minor,
         patch });
 }
-function setFirstVersion(type) {
+function getInitialVersion(type) {
     const defaultVersion = '0.1.0';
     const version = type === 'major' ? '1.0.0' : defaultVersion;
     return splitVersion(version);

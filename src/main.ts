@@ -1,9 +1,22 @@
 import simpleGit from 'simple-git';
 import { setFailed } from '@actions/core';
-import { splitVersion, incrementVersion, buildFullVersion, setFirstVersion as getInitialVersion, buildMinorVersion, buildMajorVersion, Version } from './version';
+import {
+  splitVersion,
+  incrementVersion,
+  buildFullVersion,
+  getInitialVersion,
+  buildMinorVersion,
+  buildMajorVersion,
+  Version
+} from './version';
 import { Inputs, getInputs, setOutputs } from './io';
 
-const git = simpleGit();
+const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
+
+const git = simpleGit({ config: [
+  `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
+  `user.name=${GITHUB_ACTOR}`
+] });
 
 async function getNewVersion(inputs: Inputs, tag?: string): Promise<Version> {
   const { specificVersion, incrementType } = inputs;
