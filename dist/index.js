@@ -31113,13 +31113,13 @@ function getNewVersion(inputs, tag) {
         const minorVersionString = (0, version_1.buildMinorVersion)(version);
         const majorVersionString = (0, version_1.buildMajorVersion)(version);
         yield git
-            .tags([
+            .tag([
             '-f',
             '-a',
             `-m "Updating ${majorVersionString} to ${versionString}"`,
             majorVersionString
         ])
-            .tags([
+            .tag([
             '-f',
             '-a',
             `-m "Updating ${minorVersionString} to ${versionString}"`,

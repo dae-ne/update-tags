@@ -50,13 +50,13 @@ async function getNewVersion(inputs: Inputs, tag?: string): Promise<Version> {
     const majorVersionString = buildMajorVersion(version);
 
     await git
-      .tags([
+      .tag([
         '-f',
         '-a',
         `-m "Updating ${majorVersionString} to ${versionString}"`,
         majorVersionString
       ])
-      .tags([
+      .tag([
         '-f',
         '-a',
         `-m "Updating ${minorVersionString} to ${versionString}"`,
