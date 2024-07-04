@@ -50,8 +50,16 @@ async function getNewVersion(inputs: Inputs, tag?: string): Promise<Version> {
     const majorVersionString = buildMajorVersion(version);
 
     await git
-      .addAnnotatedTag(majorVersionString, `Updating ${majorVersionString} to ${versionString}`)
-      .addAnnotatedTag(minorVersionString, `Updating ${minorVersionString} to ${versionString}`)
+      .tags({
+        '-f': null,
+        '-a': majorVersionString,
+        '-m': `Updating ${majorVersionString} to ${versionString}`
+      })
+      .tags({
+        '-f': null,
+        '-a': minorVersionString,
+        '-m': `Updating ${minorVersionString} to ${versionString}`
+      })
       .addAnnotatedTag(versionString, `Release ${versionString}`)
       .pushTags(['--force']);
 
