@@ -31082,11 +31082,13 @@ const simple_git_1 = __nccwpck_require__(9103);
 const core_1 = __nccwpck_require__(2186);
 const version_1 = __nccwpck_require__(1946);
 const io_1 = __nccwpck_require__(8672);
-const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
-const git = (0, simple_git_1.default)({ config: [
-        `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
-        `user.name=${GITHUB_ACTOR}`
-    ] });
+function configureGit() {
+    const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
+    return (0, simple_git_1.default)({ config: [
+            `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
+            `user.name=${GITHUB_ACTOR}`
+        ] });
+}
 function getNewVersion(inputs, tag) {
     return __awaiter(this, void 0, void 0, function* () {
         const { specificVersion, incrementType } = inputs;
@@ -31100,41 +31102,27 @@ function getNewVersion(inputs, tag) {
         return (0, version_1.incrementVersion)(version, incrementType);
     });
 }
-git.tags((err, tags) => __awaiter(void 0, void 0, void 0, function* () {
-    if (err) {
-        (0, core_1.setFailed)(err.message);
-        return;
-    }
-    let inputs;
+(() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        inputs = (0, io_1.getInputs)();
-    }
-    catch (error) {
-        (0, core_1.setFailed)(error.message);
-        return;
-    }
-    const { all, latest } = tags;
-    const version = yield getNewVersion(inputs, latest);
-    if (typeof version === 'string') {
-        (0, core_1.setFailed)(version);
-        return;
-    }
-    let versionString = (0, version_1.buildFullVersion)(version);
-    let minorVersionString = (0, version_1.buildMinorVersion)(version);
-    let majorVersionString = (0, version_1.buildMajorVersion)(version);
-    try {
+        const git = configureGit();
+        yield git.pull(['--tags', '--quiet']);
+        const { latest } = yield git.tags();
+        const inputs = (0, io_1.getInputs)();
+        const version = yield getNewVersion(inputs, latest);
+        const versionString = (0, version_1.buildFullVersion)(version);
+        const minorVersionString = (0, version_1.buildMinorVersion)(version);
+        const majorVersionString = (0, version_1.buildMajorVersion)(version);
         yield git
             .addAnnotatedTag(majorVersionString, `Updating ${majorVersionString} to ${versionString}`)
             .addAnnotatedTag(minorVersionString, `Updating ${minorVersionString} to ${versionString}`)
             .addAnnotatedTag(versionString, `Release ${versionString}`)
             .pushTags(['--force']);
+        (0, io_1.setOutputs)(versionString, latest);
     }
     catch (error) {
         (0, core_1.setFailed)(error.message);
-        return;
     }
-    (0, io_1.setOutputs)(versionString, latest);
-}));
+}))();
 
 
 /***/ }),
