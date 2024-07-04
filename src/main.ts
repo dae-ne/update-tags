@@ -1,4 +1,4 @@
-import simpleGit from 'simple-git';
+import simpleGit, { SimpleGit } from 'simple-git';
 import { setFailed } from '@actions/core';
 import {
   splitVersion,
@@ -11,12 +11,14 @@ import {
 } from './version';
 import { Inputs, getInputs, setOutputs } from './io';
 
-const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
+function configureGit(): SimpleGit{
+  const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
 
-const git = simpleGit({ config: [
-  `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
-  `user.name=${GITHUB_ACTOR}`
-] });
+  return simpleGit({ config: [
+    `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
+    `user.name=${GITHUB_ACTOR}`
+  ] });
+}
 
 async function getNewVersion(inputs: Inputs, tag?: string): Promise<Version> {
   const { specificVersion, incrementType } = inputs;
@@ -33,43 +35,28 @@ async function getNewVersion(inputs: Inputs, tag?: string): Promise<Version> {
   return incrementVersion(version, incrementType);
 }
 
-git.tags(async (err, tags) => {
-  if (err) {
-    setFailed(err.message);
-    return;
-  }
-
-  let inputs: Inputs;
-
+(async () => {
   try {
-    inputs = getInputs();
-  } catch (error) {
-    setFailed(error.message);
-    return;
-  }
+    const git = configureGit();
+    await git.pull(['--tags', '--quiet']);
 
-  const { all, latest } = tags;
-  const version = await getNewVersion(inputs, latest);
+    const { latest } = await git.tags();
 
-  if (typeof version === 'string') {
-    setFailed(version);
-    return;
-  }
+    const inputs = getInputs();
+    const version = await getNewVersion(inputs, latest);
 
-  let versionString = buildFullVersion(version);
-  let minorVersionString = buildMinorVersion(version);
-  let majorVersionString = buildMajorVersion(version);
+    const versionString = buildFullVersion(version);
+    const minorVersionString = buildMinorVersion(version);
+    const majorVersionString = buildMajorVersion(version);
 
-  try {
     await git
       .addAnnotatedTag(majorVersionString, `Updating ${majorVersionString} to ${versionString}`)
       .addAnnotatedTag(minorVersionString, `Updating ${minorVersionString} to ${versionString}`)
       .addAnnotatedTag(versionString, `Release ${versionString}`)
       .pushTags(['--force']);
+
+    setOutputs(versionString, latest);
   } catch (error) {
     setFailed(error.message);
-    return;
   }
-
-  setOutputs(versionString, latest);
-});
+})();
