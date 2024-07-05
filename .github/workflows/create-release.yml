@@ -1,0 +1,40 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'specific version'
+        required: false
+        type: string
+      update-type:
+        description: 'version update type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  build:
+    name: Create release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Update tags
+        id: update_tags
+        uses: dae-ne/update-tags@main
+        with:
+          type: ${{ github.event.inputs.update-type }}
+          version: ${{ github.event.inputs.version }}
+      - name: Create Release
+        uses: dae-ne/create-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag-name: ${{ steps.update_tags.outputs.version }}
+          name: Release ${{ steps.update_tags.outputs.version }}
