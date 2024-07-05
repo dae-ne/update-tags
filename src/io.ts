@@ -1,4 +1,5 @@
 import { getInput, setOutput } from '@actions/core';
+
 import { IncrementType, IncrementTypes } from './version';
 
 export type Inputs = {
@@ -17,7 +18,7 @@ export function getInputs(): Inputs {
   return { specificVersion, incrementType: incrementType as IncrementType };
 }
 
-export function setOutputs(version: string, previousVersion?: string) {
+export function setOutputs(version: string, previousVersion?: string): void {
   setOutput('version', version);
   setOutput('previous-version', previousVersion);
 }

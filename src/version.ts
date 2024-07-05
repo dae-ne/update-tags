@@ -1,8 +1,9 @@
 const VERSION_PREFIX = 'v';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const IncrementTypes = ['major', 'minor', 'patch'] as const;
 
-export type IncrementType = typeof IncrementTypes[number];
+export type IncrementType = (typeof IncrementTypes)[number];
 
 export type Version = {
   hasPrefix: boolean;
@@ -14,6 +15,8 @@ export type Version = {
 };
 
 export function splitVersion(version: string): Version {
+  /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+
   const hasPrefix = version.startsWith(VERSION_PREFIX);
   const semanticVersion = hasPrefix ? version.slice(1) : version;
 
@@ -29,6 +32,8 @@ export function splitVersion(version: string): Version {
     preRelease: suffixParts?.[0],
     build: suffixParts?.[1]
   };
+
+  /* eslint-enable @typescript-eslint/no-unnecessary-condition */
 }
 
 export function buildFullVersion(version: Version): string {
@@ -41,17 +46,13 @@ export function buildFullVersion(version: Version): string {
 
 export function buildMinorVersion(version: Version): string {
   const { hasPrefix, major, minor } = version;
-  const versionString = hasPrefix
-    ? `${VERSION_PREFIX}${major}.${minor}`
-    : `${major}.${minor}`;
+  const versionString = hasPrefix ? `${VERSION_PREFIX}${major}.${minor}` : `${major}.${minor}`;
   return addSuffix(versionString, version);
 }
 
 export function buildMajorVersion(version: Version): string {
   const { hasPrefix, major } = version;
-  const versionString = hasPrefix
-    ? `${VERSION_PREFIX}${major}`
-    : `${major}`;
+  const versionString = hasPrefix ? `${VERSION_PREFIX}${major}` : `${major}`;
   return addSuffix(versionString, version);
 }
 
@@ -71,6 +72,8 @@ export function incrementVersion(version: Version, type: IncrementType): Version
     case 'patch':
       patch += 1;
       break;
+    default:
+      throw new Error(`Invalid increment type: ${type}`);
   }
 
   return {
