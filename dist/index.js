@@ -2540,13 +2540,13 @@ module.exports = setup;
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
 	module.exports = __nccwpck_require__(8222);
 } else {
-	module.exports = __nccwpck_require__(5332);
+	module.exports = __nccwpck_require__(4874);
 }
 
 
 /***/ }),
 
-/***/ 5332:
+/***/ 4874:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -2580,7 +2580,7 @@ exports.colors = [6, 2, 3, 4, 5, 1];
 try {
 	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
 	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __nccwpck_require__(132);
+	const supportsColor = __nccwpck_require__(9318);
 
 	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
 		exports.colors = [
@@ -2811,6 +2811,22 @@ formatters.o = function (v) {
 formatters.O = function (v) {
 	this.inspectOpts.colors = this.useColors;
 	return util.inspect(v, this.inspectOpts);
+};
+
+
+/***/ }),
+
+/***/ 1621:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = (flag, argv = process.argv) => {
+	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
+	const position = argv.indexOf(prefix + flag);
+	const terminatorPosition = argv.indexOf('--');
+	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
 };
 
 
@@ -7947,6 +7963,149 @@ var { esModuleFactory: esModuleFactory2, gitInstanceFactory: gitInstanceFactory2
 var simpleGit = esModuleFactory2(gitExportFactory2(gitInstanceFactory2));
 module.exports = Object.assign(simpleGit, { gitP: gitP2, simpleGit });
 //# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 9318:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const os = __nccwpck_require__(2037);
+const tty = __nccwpck_require__(6224);
+const hasFlag = __nccwpck_require__(1621);
+
+const {env} = process;
+
+let forceColor;
+if (hasFlag('no-color') ||
+	hasFlag('no-colors') ||
+	hasFlag('color=false') ||
+	hasFlag('color=never')) {
+	forceColor = 0;
+} else if (hasFlag('color') ||
+	hasFlag('colors') ||
+	hasFlag('color=true') ||
+	hasFlag('color=always')) {
+	forceColor = 1;
+}
+
+if ('FORCE_COLOR' in env) {
+	if (env.FORCE_COLOR === 'true') {
+		forceColor = 1;
+	} else if (env.FORCE_COLOR === 'false') {
+		forceColor = 0;
+	} else {
+		forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
+	}
+}
+
+function translateLevel(level) {
+	if (level === 0) {
+		return false;
+	}
+
+	return {
+		level,
+		hasBasic: true,
+		has256: level >= 2,
+		has16m: level >= 3
+	};
+}
+
+function supportsColor(haveStream, streamIsTTY) {
+	if (forceColor === 0) {
+		return 0;
+	}
+
+	if (hasFlag('color=16m') ||
+		hasFlag('color=full') ||
+		hasFlag('color=truecolor')) {
+		return 3;
+	}
+
+	if (hasFlag('color=256')) {
+		return 2;
+	}
+
+	if (haveStream && !streamIsTTY && forceColor === undefined) {
+		return 0;
+	}
+
+	const min = forceColor || 0;
+
+	if (env.TERM === 'dumb') {
+		return min;
+	}
+
+	if (process.platform === 'win32') {
+		// Windows 10 build 10586 is the first Windows release that supports 256 colors.
+		// Windows 10 build 14931 is the first release that supports 16m/TrueColor.
+		const osRelease = os.release().split('.');
+		if (
+			Number(osRelease[0]) >= 10 &&
+			Number(osRelease[2]) >= 10586
+		) {
+			return Number(osRelease[2]) >= 14931 ? 3 : 2;
+		}
+
+		return 1;
+	}
+
+	if ('CI' in env) {
+		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
+			return 1;
+		}
+
+		return min;
+	}
+
+	if ('TEAMCITY_VERSION' in env) {
+		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
+	}
+
+	if (env.COLORTERM === 'truecolor') {
+		return 3;
+	}
+
+	if ('TERM_PROGRAM' in env) {
+		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
+
+		switch (env.TERM_PROGRAM) {
+			case 'iTerm.app':
+				return version >= 3 ? 3 : 2;
+			case 'Apple_Terminal':
+				return 2;
+			// No default
+		}
+	}
+
+	if (/-256(color)?$/i.test(env.TERM)) {
+		return 2;
+	}
+
+	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+		return 1;
+	}
+
+	if ('COLORTERM' in env) {
+		return 1;
+	}
+
+	return min;
+}
+
+function getSupportLevel(stream) {
+	const level = supportsColor(stream, stream && stream.isTTY);
+	return translateLevel(level);
+}
+
+module.exports = {
+	supportsColor: getSupportLevel,
+	stdout: translateLevel(supportsColor(true, tty.isatty(1))),
+	stderr: translateLevel(supportsColor(true, tty.isatty(2)))
+};
 
 
 /***/ }),
@@ -30463,7 +30622,7 @@ var _v3 = _interopRequireDefault(__nccwpck_require__(5122));
 
 var _v4 = _interopRequireDefault(__nccwpck_require__(9120));
 
-var _nil = _interopRequireDefault(__nccwpck_require__(5350));
+var _nil = _interopRequireDefault(__nccwpck_require__(5332));
 
 var _version = _interopRequireDefault(__nccwpck_require__(1595));
 
@@ -30507,7 +30666,7 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 5350:
+/***/ 5332:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -31078,56 +31237,57 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const simple_git_1 = __nccwpck_require__(9103);
 const core_1 = __nccwpck_require__(2186);
-const version_1 = __nccwpck_require__(1946);
+const simple_git_1 = __nccwpck_require__(9103);
 const io_1 = __nccwpck_require__(8672);
-function configureGit() {
-    const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
-    return (0, simple_git_1.default)({ config: [
-            `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
-            `user.name=${GITHUB_ACTOR}`
-        ] });
-}
-function getNewVersion(inputs, tag) {
+const version_1 = __nccwpck_require__(1946);
+function handleAction() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { specificVersion, incrementType } = inputs;
-        if (specificVersion) {
-            return (0, version_1.splitVersion)(specificVersion);
-        }
-        if (!tag) {
-            return (0, version_1.getInitialVersion)(incrementType);
-        }
-        const version = (0, version_1.splitVersion)(tag);
-        return (0, version_1.incrementVersion)(version, incrementType);
-    });
-}
-(() => __awaiter(void 0, void 0, void 0, function* () {
-    try {
         const git = configureGit();
         yield git.pull(['--tags', '--quiet']);
         const { latest } = yield git.tags();
         const inputs = (0, io_1.getInputs)();
-        const version = yield getNewVersion(inputs, latest);
+        const version = getNewVersion(inputs, latest);
         const versionString = (0, version_1.buildFullVersion)(version);
         const minorVersionString = (0, version_1.buildMinorVersion)(version);
         const majorVersionString = (0, version_1.buildMajorVersion)(version);
+        const getTagArguments = (tag) => [
+            '-f',
+            '-a',
+            `-m "Updating ${tag} to ${versionString}"`,
+            tag
+        ];
         yield git
-            .tag([
-            '-f',
-            '-a',
-            `-m "Updating ${majorVersionString} to ${versionString}"`,
-            majorVersionString
-        ])
-            .tag([
-            '-f',
-            '-a',
-            `-m "Updating ${minorVersionString} to ${versionString}"`,
-            minorVersionString
-        ])
+            .tag(getTagArguments(majorVersionString))
+            .tag(getTagArguments(minorVersionString))
             .addAnnotatedTag(versionString, `Release ${versionString}`)
             .pushTags(['--force']);
         (0, io_1.setOutputs)(versionString, latest);
+    });
+}
+function configureGit() {
+    const { GITHUB_ACTOR, GITHUB_ACTOR_ID } = process.env;
+    return (0, simple_git_1.default)({
+        config: [
+            `user.email=${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com`,
+            `user.name=${GITHUB_ACTOR}`
+        ]
+    });
+}
+function getNewVersion(inputs, tag) {
+    const { specificVersion, incrementType } = inputs;
+    if (specificVersion) {
+        return (0, version_1.splitVersion)(specificVersion);
+    }
+    if (!tag) {
+        return (0, version_1.getInitialVersion)(incrementType);
+    }
+    const version = (0, version_1.splitVersion)(tag);
+    return (0, version_1.incrementVersion)(version, incrementType);
+}
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield handleAction();
     }
     catch (error) {
         (0, core_1.setFailed)(error.message);
@@ -31151,8 +31311,10 @@ exports.buildMajorVersion = buildMajorVersion;
 exports.incrementVersion = incrementVersion;
 exports.getInitialVersion = getInitialVersion;
 const VERSION_PREFIX = 'v';
+// eslint-disable-next-line @typescript-eslint/naming-convention
 exports.IncrementTypes = ['major', 'minor', 'patch'];
 function splitVersion(version) {
+    /* eslint-disable @typescript-eslint/no-unnecessary-condition */
     const hasPrefix = version.startsWith(VERSION_PREFIX);
     const semanticVersion = hasPrefix ? version.slice(1) : version;
     const [versionCore, suffix] = semanticVersion.split(/[-+]/, 2);
@@ -31166,6 +31328,7 @@ function splitVersion(version) {
         preRelease: suffixParts === null || suffixParts === void 0 ? void 0 : suffixParts[0],
         build: suffixParts === null || suffixParts === void 0 ? void 0 : suffixParts[1]
     };
+    /* eslint-enable @typescript-eslint/no-unnecessary-condition */
 }
 function buildFullVersion(version) {
     const { hasPrefix, major, minor, patch } = version;
@@ -31176,16 +31339,12 @@ function buildFullVersion(version) {
 }
 function buildMinorVersion(version) {
     const { hasPrefix, major, minor } = version;
-    const versionString = hasPrefix
-        ? `${VERSION_PREFIX}${major}.${minor}`
-        : `${major}.${minor}`;
+    const versionString = hasPrefix ? `${VERSION_PREFIX}${major}.${minor}` : `${major}.${minor}`;
     return addSuffix(versionString, version);
 }
 function buildMajorVersion(version) {
     const { hasPrefix, major } = version;
-    const versionString = hasPrefix
-        ? `${VERSION_PREFIX}${major}`
-        : `${major}`;
+    const versionString = hasPrefix ? `${VERSION_PREFIX}${major}` : `${major}`;
     return addSuffix(versionString, version);
 }
 function incrementVersion(version, type) {
@@ -31203,6 +31362,8 @@ function incrementVersion(version, type) {
         case 'patch':
             patch += 1;
             break;
+        default:
+            throw new Error(`Invalid increment type: ${type}`);
     }
     return Object.assign(Object.assign({}, version), { major,
         minor,
@@ -31224,14 +31385,6 @@ function addSuffix(versionCore, version) {
     }
     return versionString;
 }
-
-
-/***/ }),
-
-/***/ 132:
-/***/ ((module) => {
-
-module.exports = eval("require")("supports-color");
 
 
 /***/ }),
