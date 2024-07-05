@@ -31195,11 +31195,14 @@ function incrementVersion(version, type) {
             major += 1;
             minor = 0;
             patch = 0;
+            break;
         case 'minor':
             minor += 1;
             patch = 0;
+            break;
         case 'patch':
             patch += 1;
+            break;
     }
     return Object.assign(Object.assign({}, version), { major,
         minor,

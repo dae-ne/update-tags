@@ -63,11 +63,14 @@ export function incrementVersion(version: Version, type: IncrementType): Version
       major += 1;
       minor = 0;
       patch = 0;
+      break;
     case 'minor':
       minor += 1;
       patch = 0;
+      break;
     case 'patch':
       patch += 1;
+      break;
   }
 
   return {
