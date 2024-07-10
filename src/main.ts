@@ -46,9 +46,11 @@ async function handleAction(): Promise<void> {
     await git.tag(getTagArguments(minorVersionString));
   }
 
-  await git
-    .addAnnotatedTag(versionString, `Release ${versionString}`)
-    .pushTags(['--force']);
+  await git.addAnnotatedTag(versionString, `Release ${versionString}`);
+
+  if (!inputs.skipPush) {
+    await git.pushTags(['--force']);
+  }
 
   setOutputs(versionString, latest);
 }

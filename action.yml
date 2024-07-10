@@ -8,6 +8,10 @@ inputs:
     description: 'Type of version increment. Available options: major, minor, patch'
     required: false
     default: 'patch'
+  skip-push:
+    description: 'Skip pushing the tags to remote repository'
+    required: false
+    default: false
 outputs:
   version:
     description: 'Version that was set'

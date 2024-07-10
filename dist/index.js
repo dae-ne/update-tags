@@ -31209,10 +31209,11 @@ const version_1 = __nccwpck_require__(1946);
 function getInputs() {
     const specificVersion = (0, core_1.getInput)('version');
     const incrementType = (0, core_1.getInput)('type');
+    const skipPush = (0, core_1.getInput)('skip-push') === 'true';
     if (incrementType && !version_1.IncrementTypes.includes(incrementType)) {
         throw new Error(`Invalid increment type: ${incrementType}`);
     }
-    return { specificVersion, incrementType: incrementType };
+    return { specificVersion, incrementType: incrementType, skipPush };
 }
 function setOutputs(version, previousVersion) {
     (0, core_1.setOutput)('version', version);
@@ -31267,9 +31268,10 @@ function handleAction() {
         if (major > 0 || minor > 0) {
             yield git.tag(getTagArguments(minorVersionString));
         }
-        yield git
-            .addAnnotatedTag(versionString, `Release ${versionString}`)
-            .pushTags(['--force']);
+        yield git.addAnnotatedTag(versionString, `Release ${versionString}`);
+        if (!inputs.skipPush) {
+            yield git.pushTags(['--force']);
+        }
         (0, io_1.setOutputs)(versionString, latest);
     });
 }
