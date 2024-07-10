@@ -1,4 +1,5 @@
 const VERSION_PREFIX = 'v';
+const DEFAULT_VERSION = '0.1.0';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const IncrementTypes = ['major', 'minor', 'patch'] as const;
@@ -85,8 +86,7 @@ export function incrementVersion(version: Version, type: IncrementType): Version
 }
 
 export function getInitialVersion(type?: IncrementType): Version {
-  const defaultVersion = '0.1.0';
-  const version = type === 'major' ? '1.0.0' : defaultVersion;
+  const version = type === 'major' ? '1.0.0' : DEFAULT_VERSION;
   return splitVersion(version);
 }
 

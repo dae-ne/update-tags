@@ -31325,6 +31325,7 @@ exports.buildMajorVersion = buildMajorVersion;
 exports.incrementVersion = incrementVersion;
 exports.getInitialVersion = getInitialVersion;
 const VERSION_PREFIX = 'v';
+const DEFAULT_VERSION = '0.1.0';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 exports.IncrementTypes = ['major', 'minor', 'patch'];
 function splitVersion(version) {
@@ -31384,8 +31385,7 @@ function incrementVersion(version, type) {
         patch });
 }
 function getInitialVersion(type) {
-    const defaultVersion = '0.1.0';
-    const version = type === 'major' ? '1.0.0' : defaultVersion;
+    const version = type === 'major' ? '1.0.0' : DEFAULT_VERSION;
     return splitVersion(version);
 }
 function addSuffix(versionCore, version) {
