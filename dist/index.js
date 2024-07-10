@@ -31257,9 +31257,14 @@ function handleAction() {
             `-m "Updating ${tag} to ${versionString}"`,
             tag
         ];
+        const { major, minor } = version;
+        if (major > 0) {
+            yield git.tag(getTagArguments(majorVersionString));
+        }
+        if (major > 0 || minor > 0) {
+            yield git.tag(getTagArguments(minorVersionString));
+        }
         yield git
-            .tag(getTagArguments(majorVersionString))
-            .tag(getTagArguments(minorVersionString))
             .addAnnotatedTag(versionString, `Release ${versionString}`)
             .pushTags(['--force']);
         (0, io_1.setOutputs)(versionString, latest);
