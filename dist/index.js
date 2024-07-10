@@ -31242,6 +31242,7 @@ const core_1 = __nccwpck_require__(2186);
 const simple_git_1 = __nccwpck_require__(9103);
 const io_1 = __nccwpck_require__(8672);
 const version_1 = __nccwpck_require__(1946);
+const LATEST_TAG_NAME = 'latest';
 function handleAction() {
     return __awaiter(this, void 0, void 0, function* () {
         const git = configureGit();
@@ -31268,7 +31269,9 @@ function handleAction() {
         if (major > 0 || minor > 0) {
             yield git.tag(getTagArguments(minorVersionString));
         }
-        yield git.addAnnotatedTag(versionString, `Release ${versionString}`);
+        yield git
+            .addAnnotatedTag(versionString, `Release ${versionString}`)
+            .tag(getTagArguments(LATEST_TAG_NAME));
         if (!inputs.skipPush) {
             yield git.pushTags(['--force']);
         }

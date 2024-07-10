@@ -12,6 +12,8 @@ import {
   Version
 } from './version';
 
+const LATEST_TAG_NAME = 'latest';
+
 async function handleAction(): Promise<void> {
   const git = configureGit();
   await git.pull(['--tags', '--quiet']);
@@ -46,7 +48,9 @@ async function handleAction(): Promise<void> {
     await git.tag(getTagArguments(minorVersionString));
   }
 
-  await git.addAnnotatedTag(versionString, `Release ${versionString}`);
+  await git
+    .addAnnotatedTag(versionString, `Release ${versionString}`)
+    .tag(getTagArguments(LATEST_TAG_NAME));
 
   if (!inputs.skipPush) {
     await git.pushTags(['--force']);
