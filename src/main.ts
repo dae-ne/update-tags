@@ -16,7 +16,11 @@ async function handleAction(): Promise<void> {
   const git = configureGit();
   await git.pull(['--tags', '--quiet']);
 
-  const { latest } = await git.tags();
+  const { all } = await git.tags();
+
+  const latest = all
+    .filter((tag) => /^v?\d+\.\d+\.\d+$/.test(tag))
+    .at(-1);
 
   const inputs = getInputs();
   const version = getNewVersion(inputs, latest);

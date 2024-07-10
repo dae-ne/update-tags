@@ -31245,7 +31245,10 @@ function handleAction() {
     return __awaiter(this, void 0, void 0, function* () {
         const git = configureGit();
         yield git.pull(['--tags', '--quiet']);
-        const { latest } = yield git.tags();
+        const { all } = yield git.tags();
+        const latest = all
+            .filter((tag) => /^v?\d+\.\d+\.\d+$/.test(tag))
+            .at(-1);
         const inputs = (0, io_1.getInputs)();
         const version = getNewVersion(inputs, latest);
         const versionString = (0, version_1.buildFullVersion)(version);
