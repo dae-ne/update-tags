@@ -108,7 +108,7 @@ The following examples show how to use the action in different scenarios.
 
 ## Notes
 
-- When incrementing version using the `type` input, the latest full version, non pre-release, tag is used as a base. For example, even if the current version is `v1.2.0-alpha.1`, the `minor` type will increment the latest `v1.1.23` version to `v1.2.0`.
+- When incrementing version using the `type` input, the latest full version, non pre-release, is used as a base. For example, even if the current version is `v1.2.0-alpha.1`, the `minor` type will increment the latest `v1.1.23` version to `v1.2.0`.
 
 - The `v` prefix can be used, but it's not required. Both `1.2.3` and `v1.2.3` are valid version strings.
 
