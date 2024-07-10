@@ -38,19 +38,21 @@ async function handleAction(): Promise<void> {
     tag
   ];
 
-  const { major, minor } = version;
+  const { major, minor, preRelease } = version;
 
-  if (major > 0) {
+  if (major > 0 && !preRelease) {
     await git.tag(getTagArguments(majorVersionString));
   }
 
-  if (major > 0 || minor > 0) {
+  if ((major > 0 || minor > 0) && !preRelease) {
     await git.tag(getTagArguments(minorVersionString));
   }
 
-  await git
-    .addAnnotatedTag(versionString, `Release ${versionString}`)
-    .tag(getTagArguments(LATEST_TAG_NAME));
+  await git.addAnnotatedTag(versionString, `Release ${versionString}`);
+
+  if (!preRelease) {
+    await git.tag(getTagArguments(LATEST_TAG_NAME));
+  }
 
   if (!inputs.skipPush) {
     await git.pushTags(['--force']);

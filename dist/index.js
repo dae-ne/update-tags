@@ -31262,16 +31262,17 @@ function handleAction() {
             `-m "Updating ${tag} to ${versionString}"`,
             tag
         ];
-        const { major, minor } = version;
-        if (major > 0) {
+        const { major, minor, preRelease } = version;
+        if (major > 0 && !preRelease) {
             yield git.tag(getTagArguments(majorVersionString));
         }
-        if (major > 0 || minor > 0) {
+        if ((major > 0 || minor > 0) && !preRelease) {
             yield git.tag(getTagArguments(minorVersionString));
         }
-        yield git
-            .addAnnotatedTag(versionString, `Release ${versionString}`)
-            .tag(getTagArguments(LATEST_TAG_NAME));
+        yield git.addAnnotatedTag(versionString, `Release ${versionString}`);
+        if (!preRelease) {
+            yield git.tag(getTagArguments(LATEST_TAG_NAME));
+        }
         if (!inputs.skipPush) {
             yield git.pushTags(['--force']);
         }
