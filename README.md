@@ -1,13 +1,13 @@
 # Update Tags GitHub Action
 
-GitHub action that updates tags in a repository.
+GitHub action that updates tags in a repository (still in development).
 
 
 ## Inputs
 
 - `type`: The type of version update. The value can be **patch**, **minor**, or **major**. The default value is **patch**.
 - `version`: The specific version to update. The value can be any valid version string.
-- `skip-push`: A flag to skip pushing the changes to the repository. The value can be **true** or **false**. The default value is **false**. Mainly used for local development.
+- `skip-push`: A flag to skip pushing the changes to the remote repository. The value can be **true** or **false**. The default value is **false**. Mainly used for local development.
 
 
 ## Outputs
