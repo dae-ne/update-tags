@@ -10,8 +10,7 @@ npm run lint
 echo -e "\n🔨 Building project..."
 npm run build
 
-echo -e "\n📦 Adding the dist/index.js file to the latest commit..."
+echo -e "\n📦 Adding the dist/index.js file..."
 git add dist/index.js
-git commit --no-verify --amend --no-edit
 
 echo -e "\n🎉 Pre-commit status: success 🎉\n"
