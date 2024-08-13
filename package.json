@@ -5,7 +5,8 @@
     "start:dev": "npm run build && node --env-file=.env.dev dist/index.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --fix --ext .ts",
-    "format": "prettier src/**/*.ts --write"
+    "format": "prettier src/**/*.ts --write",
+    "prepare": "git config core.hooksPath .githooks && node -e \"require('fs').writeFileSync('.env.dev', require('fs').readFileSync('.env.dev.template', 'utf8'))\""
   },
   "dependencies": {
     "@actions/core": "^1.10.1",

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+echo "🚀 Running pre-commit hook 🚀"
+
+echo -e "\n🔍 Running linter..."
+npm run lint
+
+echo -e "\n🔨 Building project..."
+npm run build
+
+echo -e "\n📦 Adding the dist/index.js file to the latest commit..."
+git add dist/index.js
+git commit --no-verify --amend --no-edit
+
+echo -e "\n🎉 Pre-commit status: success 🎉\n"

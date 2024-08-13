@@ -117,7 +117,7 @@ The following examples show how to use the action in different scenarios.
 
 1. Clone the repository
 2. Install the dependencies using `npm install`
-3. Create an `.env.dev` file by copying the `.env.dev.template`
+3. Run the `npm run prepare` command to set up the environment
 4. Set input values in the `.env.dev` file
 5. Run the action using `npm run start:dev`
 
