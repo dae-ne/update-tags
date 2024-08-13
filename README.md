@@ -1,4 +1,4 @@
-# Update Tags GitHub Action
+# Update Tags - GitHub Action
 
 GitHub action that updates tags in a repository (still in development). Uses the [semantic versioning](https://semver.org/) to update the tags.
 
