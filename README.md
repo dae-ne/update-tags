@@ -112,6 +112,8 @@ The following examples show how to use the action in different scenarios.
 
 - The `v` prefix can be used, but it's not required. Both `1.2.3` and `v1.2.3` are valid version strings.
 
+- When creating a development version, e.g. an initial `v0.1.0`, the `v0` tag is omitted (`v0.1.0`, `v0.1`, and `latest` are created as usual). Similarly, when creating a `v0.0.x` (e.g. `v0.0.1`), the `v0` and `v0.0` tags are omitted.
+
 
 ## Run locally
 
