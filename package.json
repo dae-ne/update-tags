@@ -2,7 +2,7 @@
   "name": "update-tags",
   "scripts": {
     "build": "ncc build src/main.ts",
-    "start:dev": "npm run build && node --env-file=.env.dev dist/index.js",
+    "dev": "npm run build && node --env-file=.env.dev dist/index.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --fix --ext .ts",
     "format": "prettier src/**/*.ts --write",
