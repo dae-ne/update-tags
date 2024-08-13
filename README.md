@@ -124,4 +124,4 @@ The following examples show how to use the action in different scenarios.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+GPL-3.0 - see the [LICENSE](LICENSE) file for details.
